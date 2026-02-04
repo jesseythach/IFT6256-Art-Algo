@@ -1,3 +1,7 @@
+const margin = 2;
+let canvasWidth;
+let canvasHeight;
+
 let cols;
 let rows;
 let cellSize = 50;
@@ -5,19 +9,31 @@ let noiseScale = 0.02; // check later
 let zOff = 0;
 let zNoiseSpeed = 0.001;
 let flowField = [];
+let flowMagnitude = 0.1;
 
 let arrowLength = 25;
 
 let avgFPS = 0;
 let lastFPSImportance = 0.2;
 
+let particles = [];
+let nbParticles = 5000;
+
 function setup() {
-  createCanvas(800, 500);
-  cols = int(width / cellSize);
-  rows = int(height / cellSize);
+  canvasWidth = windowWidth - 2 * margin;
+  canvasHeight = windowHeight - 2 * margin;
+  createCanvas(canvasWidth, canvasHeight);
+
+  // createCanvas(1200, 900);
+  cols = ceil(width / cellSize);
+  rows = ceil(height / cellSize);
   fr = createP("");
   angleMode(DEGREES);
   colorMode(HSB);
+
+  for (let i = 0; i < nbParticles; i++) {
+    particles[i] = new Particle(random(width), random(height));
+  }
 }
 
 function colorPixel() {
@@ -50,37 +66,45 @@ function computeFlowField() {
         noise(colInd * noiseScale, rowInd * noiseScale, zOff) * 360 * 4,
       );
       // fill((angle / 360 / 4) * 255);
-      // noFill();
+      noFill();
       // noStroke();
-      rect(colInd * cellSize, rowInd * cellSize, cellSize, cellSize);
+      // rect(colInd * cellSize, rowInd * cellSize, cellSize, cellSize);
 
-      flowField[colInd][rowInd] = p5.Vector.fromAngle(radians(angle));
+      unitVector = p5.Vector.fromAngle(radians(angle));
+      flowField[colInd][rowInd] = unitVector.copy().mult(flowMagnitude);
       //text(angle, colInd*cellSize + cellSize/2, rowInd*cellSize + cellSize/2)
 
       let midPt = createVector(
         colInd * cellSize + cellSize / 2,
         rowInd * cellSize + cellSize / 2,
       );
-      let endPt = midPt.copy().add(flowField[colInd][rowInd].mult(arrowLength));
-      line(midPt.x, midPt.y, endPt.x, endPt.y);
+      let endPt = midPt.copy().add(unitVector.mult(arrowLength));
+      // line(midPt.x, midPt.y, endPt.x, endPt.y);
     }
   }
   zOff += zNoiseSpeed;
 }
 
-function draw() {
-  //noLoop()
-  background(255);
-
-  computeFlowField();
-
-  let p = new Particle(random(width), random(height));
-  p.display();
-  p.applyForce(flowField);
- 
+function updateFPS() {
   avgFPS = floor(
     avgFPS * (1 - lastFPSImportance) + frameRate() * lastFPSImportance,
   );
   fr.html(avgFPS);
-  // console.log(avgFPS);
+  console.log(avgFPS);
+}
+
+function draw() {
+  //noLoop()
+  background(0, 0.03);
+
+  stroke(1);
+  computeFlowField();
+  // colorPixel();
+
+  for (let p = 0; p < nbParticles; p++) {
+    particles[p].setNewForce(flowField);
+    particles[p].updatePosition();
+    particles[p].checkEdges();
+    particles[p].display();
+  }
 }
