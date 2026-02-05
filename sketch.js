@@ -96,6 +96,17 @@ function drawFlowField() {
       );
       let endPt = midPt.copy().add(unitVector.mult(arrowLength));
       line(midPt.x, midPt.y, endPt.x, endPt.y);
+
+      // Draw arrowhead
+      let arrowSize = 4;
+      let angle = atan2(endPt.y - midPt.y, endPt.x - midPt.x);
+
+      push();
+      translate(endPt.x, endPt.y);
+      rotate(angle);
+      line(0, 0, -arrowSize, arrowSize / 2);
+      line(0, 0, -arrowSize, -arrowSize / 2);
+      pop();
     }
   }
 }
@@ -123,7 +134,7 @@ function applyRepulsiveForce() {
         neighbourRowInd * cellSize + cellSize / 2,
       );
       let oppDir = p5.Vector.sub(cellPos, mousePos);
-      oppDir.setMag(flowMagnitude); 
+      oppDir.setMag(flowMagnitude);
 
       flowField[neighbourColInd][neighbourRowInd] = oppDir;
     }
