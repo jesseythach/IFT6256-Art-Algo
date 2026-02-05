@@ -15,6 +15,7 @@ class Particle{
             fill(90, 100, 100);
         } else {
             fill(random(140, 220), 100, 100);
+            // fill(0, 255)
         }
         ellipse(this.position.x, this.position.y, this.size);
     }

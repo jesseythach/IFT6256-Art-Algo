@@ -10,21 +10,19 @@ let zOff = 0;
 let zNoiseSpeed = 0.001;
 let flowField = [];
 let flowMagnitude = 0.1;
-
-let arrowLength = 25;
+let arrowLength = cellSize / 2;
+let adjacentNeighbours = [];
 
 let avgFPS = 0;
 let lastFPSImportance = 0.2;
 
 let particles = [];
-let nbParticles = 5000;
+let nbParticles = 1000;
 
 function setup() {
   canvasWidth = windowWidth - 2 * margin;
   canvasHeight = windowHeight - 2 * margin;
   createCanvas(canvasWidth, canvasHeight);
-
-  // createCanvas(1200, 900);
   cols = ceil(width / cellSize);
   rows = ceil(height / cellSize);
   fr = createP("");
@@ -34,6 +32,14 @@ function setup() {
   for (let i = 0; i < nbParticles; i++) {
     particles[i] = new Particle(random(width), random(height));
   }
+}
+
+function updateFPS() {
+  avgFPS = floor(
+    avgFPS * (1 - lastFPSImportance) + frameRate() * lastFPSImportance,
+  );
+  fr.html(avgFPS);
+  console.log(avgFPS);
 }
 
 function colorPixel() {
@@ -64,41 +70,75 @@ function computeFlowField() {
     for (let rowInd = 0; rowInd < rows; rowInd++) {
       let angle = int(
         noise(colInd * noiseScale, rowInd * noiseScale, zOff) * 360 * 4,
-      );
-      // fill((angle / 360 / 4) * 255);
-      noFill();
-      // noStroke();
-      // rect(colInd * cellSize, rowInd * cellSize, cellSize, cellSize);
-
-      unitVector = p5.Vector.fromAngle(radians(angle));
+      ); // Allow the angle to do a full turn
+      let unitVector = p5.Vector.fromAngle(radians(angle));
       flowField[colInd][rowInd] = unitVector.copy().mult(flowMagnitude);
-      //text(angle, colInd*cellSize + cellSize/2, rowInd*cellSize + cellSize/2)
+    }
+  }
+  zOff += zNoiseSpeed;
+}
+
+function drawFlowField() {
+  for (let colInd = 0; colInd < cols; colInd++) {
+    for (let rowInd = 0; rowInd < rows; rowInd++) {
+      // fill((angle / 360 / 4) * 255); // For grayscale
+      // noFill();
+      fill(255);
+      // noStroke();
+      rect(colInd * cellSize, rowInd * cellSize, cellSize, cellSize);
+
+      let unitVector = flowField[colInd][rowInd].div(flowMagnitude);
+      // text(angle, colInd*cellSize + cellSize/2, rowInd*cellSize + cellSize/2)
 
       let midPt = createVector(
         colInd * cellSize + cellSize / 2,
         rowInd * cellSize + cellSize / 2,
       );
       let endPt = midPt.copy().add(unitVector.mult(arrowLength));
-      // line(midPt.x, midPt.y, endPt.x, endPt.y);
+      line(midPt.x, midPt.y, endPt.x, endPt.y);
     }
   }
-  zOff += zNoiseSpeed;
 }
 
-function updateFPS() {
-  avgFPS = floor(
-    avgFPS * (1 - lastFPSImportance) + frameRate() * lastFPSImportance,
-  );
-  fr.html(avgFPS);
-  console.log(avgFPS);
+function applyRepulsiveForce() {
+  //text(`x: ${mouseX} y: ${mouseY}`, 50, 50);
+  //ellipse(mouseX, mouseY, cellSize, cellSize);
+
+  let cellColInd = floor(mouseX / cellSize);
+  let cellRowInd = floor(mouseY / cellSize);
+  //text(`colInd: ${cellColInd} rowInd: ${cellRowInd}`, 50, 100);
+
+  let mousePos = createVector(mouseX, mouseY);
+
+  for (let offsetX = -1; offsetX <= 1; offsetX++) {
+    for (let offsetY = -1; offsetY <= 1; offsetY++) {
+      neighbourColInd = cellColInd + offsetX;
+      neighbourRowInd = cellRowInd + offsetY;
+
+      if (neighbourColInd >= cols || neighbourColInd < 0) continue;
+      if (neighbourRowInd >= rows || neighbourRowInd < 0) continue;
+
+      let cellPos = createVector(
+        neighbourColInd * cellSize + cellSize / 2,
+        neighbourRowInd * cellSize + cellSize / 2,
+      );
+      let oppDir = p5.Vector.sub(cellPos, mousePos);
+      oppDir.setMag(flowMagnitude); 
+
+      flowField[neighbourColInd][neighbourRowInd] = oppDir;
+    }
+  }
 }
 
 function draw() {
-  //noLoop()
-  background(0, 0.03);
+  // noLoop()
+  //background(0, 0.03);
 
   stroke(1);
   computeFlowField();
+  applyRepulsiveForce();
+  drawFlowField();
+
   // colorPixel();
 
   for (let p = 0; p < nbParticles; p++) {
