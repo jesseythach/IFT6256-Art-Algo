@@ -1,6 +1,5 @@
 const margin = 2;
-let canvasWidth;
-let canvasHeight;
+let pg;
 
 let cols;
 let rows;
@@ -17,21 +16,34 @@ let avgFPS = 0;
 let lastFPSImportance = 0.2;
 
 let particles = [];
-let nbParticles = 1000;
+let nbParticles = 10000;
+
+let isPlaying = false;
+
+function windowResized() {
+  let canvasWidth = windowWidth - 2 * margin;
+  let canvasHeight = windowHeight - 2 * margin;
+  resizeCanvas(canvasWidth, canvasHeight);
+  pg.resizeCanvas(canvasWidth, canvasHeight);
+  cols = ceil(width / cellSize);
+  rows = ceil(height / cellSize);
+}
 
 function setup() {
-  canvasWidth = windowWidth - 2 * margin;
-  canvasHeight = windowHeight - 2 * margin;
+  let canvasWidth = windowWidth - 2 * margin;
+  let canvasHeight = windowHeight - 2 * margin;
   createCanvas(canvasWidth, canvasHeight);
+
+  // Create the offscreen buffer
+  pg = createGraphics(canvasWidth, canvasHeight);
+  pg.colorMode(HSB);
+  pg.background(0); // Initial black background
+
   cols = ceil(width / cellSize);
   rows = ceil(height / cellSize);
   fr = createP("");
   angleMode(DEGREES);
   colorMode(HSB);
-
-  for (let i = 0; i < nbParticles; i++) {
-    particles[i] = new Particle(random(width), random(height));
-  }
 }
 
 function updateFPS() {
@@ -111,51 +123,44 @@ function drawFlowField() {
   }
 }
 
-function applyRepulsiveForce() {
-  //text(`x: ${mouseX} y: ${mouseY}`, 50, 50);
-  //ellipse(mouseX, mouseY, cellSize, cellSize);
-
-  let cellColInd = floor(mouseX / cellSize);
-  let cellRowInd = floor(mouseY / cellSize);
-  //text(`colInd: ${cellColInd} rowInd: ${cellRowInd}`, 50, 100);
-
-  let mousePos = createVector(mouseX, mouseY);
-
-  for (let offsetX = -1; offsetX <= 1; offsetX++) {
-    for (let offsetY = -1; offsetY <= 1; offsetY++) {
-      neighbourColInd = cellColInd + offsetX;
-      neighbourRowInd = cellRowInd + offsetY;
-
-      if (neighbourColInd >= cols || neighbourColInd < 0) continue;
-      if (neighbourRowInd >= rows || neighbourRowInd < 0) continue;
-
-      let cellPos = createVector(
-        neighbourColInd * cellSize + cellSize / 2,
-        neighbourRowInd * cellSize + cellSize / 2,
-      );
-      let oppDir = p5.Vector.sub(cellPos, mousePos);
-      oppDir.setMag(flowMagnitude);
-
-      flowField[neighbourColInd][neighbourRowInd] = oppDir;
-    }
-  }
+function drawInfluence() {
+  fill(0);
+  strokeWeight(2);
+  stroke("orange");
+  ellipse(mouseX, mouseY, cellSize * 3, cellSize * 3);
 }
 
 function draw() {
   // noLoop()
-  //background(0, 0.03);
+  background(0);
+  pg.background(0, 0.03);
 
   stroke(1);
   computeFlowField();
-  applyRepulsiveForce();
-  drawFlowField();
+  // drawFlowField();
 
   // colorPixel();
-
-  for (let p = 0; p < nbParticles; p++) {
+  for (let p = 0; p < particles.length; p++) {
     particles[p].setNewForce(flowField);
     particles[p].updatePosition();
     particles[p].checkEdges();
-    particles[p].display();
+    particles[p].display(pg);
+  }
+  image(pg, 0, 0);
+  drawInfluence();
+}
+
+function keyPressed() {
+  // Space key
+  if (keyCode === 32) {
+    if (!isPlaying) {
+      for (let i = 0; i < nbParticles; i++) {
+        particles[i] = new Particle(random(width), random(height));
+      }
+      isPlaying = true;
+    } else {
+      isPlaying = false;
+      particles = [];
+    }
   }
 }
