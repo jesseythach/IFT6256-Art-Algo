@@ -7,7 +7,8 @@ class Particle {
     this.prevPos = createVector(x, y);
     this.INFLUENCE_RADIUS = 200;
     this.INFLUENCE_STRENGTH = 1;
-    this.isInsideInfluence = false;
+    this.INFLUENCE_SPEED_MULT = 10;
+    this.influenceSpeedMult = 1;
 
     this.size = 3;
     this.colorCategory = floor(random(0.7, 2.3)); //0, 1 or 2
@@ -40,22 +41,39 @@ class Particle {
   }
 
   calculateInfluenceForce() {
-    let force = p5.Vector.sub(createVector(mouseX, mouseY), this.position);
-    let distance = force.mag();
+    let forceToMouse = p5.Vector.sub(
+      createVector(mouseX, mouseY),
+      this.position,
+    ); // Vector pointing from particle to mouse
+    let distance = forceToMouse.mag();
 
-    if (distance > 0 && distance < this.INFLUENCE_RADIUS) {
-      this.isInsideInfluence = true;
-      let power = map(distance, 0, this.INFLUENCE_RADIUS, 1, 0);
-      let mappedStrength = pow(power, 2) * this.INFLUENCE_STRENGTH;
-
-      // Repulsion
-      force.mult(-1);
-      force.setMag(mappedStrength);
-
-      return force;
+    // If the particle is outside the influence radius, return zero force
+    if (distance < 0 || distance > this.INFLUENCE_RADIUS) {
+      this.influenceSpeedMult = 1;
+      return createVector(0, 0);
     }
-    this.isInsideInfluence = false;
-    return createVector(0, 0); // No force if outside influence
+    
+    let power = map(distance, 0, this.INFLUENCE_RADIUS, 1, 0);
+    let mappedStrength = pow(power, 2) * this.INFLUENCE_STRENGTH;
+    this.influenceSpeedMult = max(1, power * this.INFLUENCE_SPEED_MULT);
+    
+    forceToMouse.setMag(mappedStrength);
+
+    // Check if the particle is moving towards the mouse
+    let particleDir = this.velocity.copy();
+    let isHeadingTowardMouse = particleDir.dot(forceToMouse) > 0; // If dot product > 0, the vectors are pointing in the same direction
+    let influenceForce = forceToMouse.copy().mult(-1); // Push-back force away from the mouse
+
+    if (isHeadingTowardMouse) {
+      // Make particle deviate around mouse
+      let tangent = createVector(-forceToMouse.y, forceToMouse.x); // Rotates a vector 90 degrees counterclockwise
+      if (particleDir.dot(tangent) < 0) tangent.mult(-1); // If dot product > 0, the particle is moving in the counterclockwise direction like the tangent
+
+      influenceForce.add(tangent);
+    }
+
+    influenceForce.setMag(mappedStrength);
+    return influenceForce;
   }
 
   setNewForce(flowField) {
@@ -68,12 +86,9 @@ class Particle {
   }
 
   updatePosition() {
+    this.velocity.mult(0.96); // Damping for smoother movement
     this.velocity.add(this.acceleration);
-    if (this.isInsideInfluence) {
-      this.velocity.limit(this.maxVelocity * 5);
-    } else {
-      this.velocity.limit(this.maxVelocity);
-    }
+    this.velocity.limit(this.maxVelocity * this.influenceSpeedMult);
     this.position.add(this.velocity);
   }
 
