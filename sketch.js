@@ -10,15 +10,14 @@ let zNoiseSpeed = 0.001;
 let flowField = [];
 let flowMagnitude = 0.1;
 let arrowLength = cellSize / 2;
-let adjacentNeighbours = [];
-
-let avgFPS = 0;
-let lastFPSImportance = 0.2;
 
 let particles = [];
 let nbParticles = 10000;
+let influenceRadius = 200;
 
 let isPlaying = false;
+let influenceEnabled = false;
+let colorProfile = 1;
 
 function windowResized() {
   let canvasWidth = windowWidth - 2 * margin;
@@ -41,17 +40,8 @@ function setup() {
 
   cols = ceil(width / cellSize);
   rows = ceil(height / cellSize);
-  fr = createP("");
   angleMode(DEGREES);
   colorMode(HSB);
-}
-
-function updateFPS() {
-  avgFPS = floor(
-    avgFPS * (1 - lastFPSImportance) + frameRate() * lastFPSImportance,
-  );
-  fr.html(avgFPS);
-  console.log(avgFPS);
 }
 
 function colorPixel() {
@@ -124,14 +114,32 @@ function drawFlowField() {
 }
 
 function drawInfluence() {
-  fill(0);
-  strokeWeight(2);
-  stroke("orange");
-  ellipse(mouseX, mouseY, cellSize * 3, cellSize * 3);
+  switch (colorProfile) {
+    case 1:
+      circleColor = color(180, 100, 100); // Blue
+      break;
+    case 2:
+      circleColor = color(0, 0, 100); // White
+      break;
+    case 3:
+      circleColor = color(50, 100, 100); // Yellow
+      break;
+  }
+  noFill();
+  ellipseMode(CENTER);
+
+  drawingContext.shadowBlur = 20;
+  drawingContext.shadowColor = circleColor;
+
+  stroke(circleColor);
+  strokeWeight(8);
+  for (let i = 0; i < 5; i++) {
+    ellipse(mouseX, mouseY, influenceRadius * 0.75);
+  }
+  drawingContext.shadowBlur = 0;
 }
 
 function draw() {
-  // noLoop()
   background(0);
   pg.background(0, 0.03);
 
@@ -141,26 +149,63 @@ function draw() {
 
   // colorPixel();
   for (let p = 0; p < particles.length; p++) {
-    particles[p].setNewForce(flowField);
+    particles[p].setNewForce(flowField, influenceEnabled);
     particles[p].updatePosition();
     particles[p].checkEdges();
     particles[p].display(pg);
   }
   image(pg, 0, 0);
-  drawInfluence();
+
+  if (influenceEnabled) {
+    drawInfluence();
+  }
 }
 
 function keyPressed() {
-  // Space key
-  if (keyCode === 32) {
+  // Play/pause particles from moving with space key
+  if (keyCode === 32 && isPlaying) { // Only pause or unpause if particles are actually moving
+    if (isLooping()) {
+      noLoop();
+    } else {
+      loop();
+    }
+  }
+
+  if (!isLooping()) return; // Don't allow other interactions if paused
+  
+  // Spawn/clear particles with key 'S'
+  if (keyCode === 83) {
     if (!isPlaying) {
       for (let i = 0; i < nbParticles; i++) {
-        particles[i] = new Particle(random(width), random(height));
+        particles[i] = new Particle(random(width), random(height), influenceRadius, colorProfile);
       }
       isPlaying = true;
     } else {
       isPlaying = false;
       particles = [];
     }
+  }
+
+  // Enable influence with key 'I'
+  if (keyCode === 73) {
+    influenceEnabled = !influenceEnabled;
+  }
+
+  // Change color profile with keys 1, 2, and 3
+  if (keyCode === 49) {
+    changeColorProfile(1);
+  } else if (keyCode === 50) {
+    changeColorProfile(2);
+  } else if (keyCode === 51) {
+    changeColorProfile(3);
+  }
+}
+
+function changeColorProfile(newProfile) {
+  colorProfile = newProfile;
+  if (!isPlaying) return;
+
+  for (let i = 0; i < nbParticles; i++) {
+    particles[i].setColorProfile(colorProfile);
   }
 }
