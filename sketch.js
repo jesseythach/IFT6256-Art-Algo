@@ -33,15 +33,16 @@ function setup() {
   let canvasHeight = windowHeight - 2 * margin;
   createCanvas(canvasWidth, canvasHeight);
 
-  // Create the offscreen buffer
+  // Create layer for particles
   pg = createGraphics(canvasWidth, canvasHeight);
   pg.colorMode(HSB);
-  pg.background(0); // Initial black background
+  pg.background(0);
 
   cols = ceil(width / cellSize);
   rows = ceil(height / cellSize);
   angleMode(DEGREES);
   colorMode(HSB);
+  noCursor();
 }
 
 function colorPixel() {
@@ -70,6 +71,7 @@ function computeFlowField() {
   for (let colInd = 0; colInd < cols; colInd++) {
     flowField[colInd] = [];
     for (let rowInd = 0; rowInd < rows; rowInd++) {
+      // Create angle based on Perlin noise at each cell
       let angle = int(
         noise(colInd * noiseScale, rowInd * noiseScale, zOff) * 360 * 4,
       ); // Allow the angle to do a full turn
@@ -143,7 +145,7 @@ function draw() {
   background(0);
   pg.background(0, 0.03);
 
-  stroke(1);
+  // stroke(1);
   computeFlowField();
   // drawFlowField();
 
@@ -163,7 +165,8 @@ function draw() {
 
 function keyPressed() {
   // Play/pause particles from moving with space key
-  if (keyCode === 32 && isPlaying) { // Only pause or unpause if particles are actually moving
+  if (keyCode === 32 && isPlaying) {
+    // Only pause or unpause if particles are actually moving
     if (isLooping()) {
       noLoop();
     } else {
@@ -172,7 +175,7 @@ function keyPressed() {
   }
 
   if (!isLooping()) return; // Don't allow other interactions if paused
-  
+
   // Spawn/clear particles with key 'S'
   if (keyCode === 83) {
     if (!isPlaying) {
@@ -186,7 +189,7 @@ function keyPressed() {
     }
   }
 
-  // Enable influence with key 'I'
+  // Enable/disable influence with key 'I'
   if (keyCode === 73) {
     influenceEnabled = !influenceEnabled;
   }

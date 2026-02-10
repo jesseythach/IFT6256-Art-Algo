@@ -21,13 +21,13 @@ class Particle {
     let catWeights;
     switch (this.colorProfile) {
       case 1:
-        catWeights = [0.5, 0.5];
+        catWeights = [0.5, 0.5]; // Green and Blue
         break;
       case 2:
-        catWeights = [0.1, 1, 0.3];
+        catWeights = [0.1, 1, 0.3]; // White, Purple, and Blue 
         break;
       case 3:
-        catWeights = [0.5, 0.5, 0.1, 0.1];
+        catWeights = [0.5, 0.5, 0.1, 0.1]; // Red, Orange, Pink, and Yellow
         break;
       default:
         console.warn("Invalid color profile selected:", profile);
@@ -80,21 +80,12 @@ class Particle {
     }
 
     buffer.strokeWeight(this.size);
-    buffer.line(
-      this.prevPos.x,
-      this.prevPos.y,
-      this.position.x,
-      this.position.y,
-    );
-
+    buffer.line(this.prevPos.x, this.prevPos.y, this.position.x, this.position.y);
     this.prevPos = this.position.copy();
   }
 
   calculateInfluenceForce() {
-    let forceToMouse = p5.Vector.sub(
-      createVector(mouseX, mouseY),
-      this.position,
-    ); // Vector pointing from particle to mouse
+    let forceToMouse = p5.Vector.sub(createVector(mouseX, mouseY), this.position); // Vector pointing from particle to mouse
     let distance = forceToMouse.mag();
 
     // If the particle is outside the influence radius, return zero force
@@ -103,22 +94,20 @@ class Particle {
       return createVector(0, 0);
     }
 
-    let power = map(distance, 0, this.INFLUENCE_RADIUS, 1, 0);
-    let mappedStrength = pow(power, 2) * this.INFLUENCE_STRENGTH;
-    this.influenceSpeedMult = max(1, power * this.INFLUENCE_SPEED_MULT);
-
+    let power = map(distance, 0, this.INFLUENCE_RADIUS, 1, 0); // Closer to mouse, stronger the force
+    let mappedStrength = pow(power, 2) * this.INFLUENCE_STRENGTH; // Exponential falloff for stronger influence (actual force magnitude)
+    this.influenceSpeedMult = max(1, power * this.INFLUENCE_SPEED_MULT); // Speed multiplier based on proximity to mouse
     forceToMouse.setMag(mappedStrength);
 
     // Check if the particle is moving towards the mouse
-    let particleDir = this.velocity.copy();
-    let isHeadingTowardMouse = particleDir.dot(forceToMouse) > 0; // If dot product > 0, the vectors are pointing in the same direction
+    let particleDir = this.velocity.copy(); // Current direction of the particle
+    let isHeadingToMouse = particleDir.dot(forceToMouse) > 0; // If dot product > 0, the vectors are pointing in the same direction
     let influenceForce = forceToMouse.copy().mult(-1); // Push-back force away from the mouse
 
-    if (isHeadingTowardMouse) {
+    if (isHeadingToMouse) {
       // Make particle deviate around mouse
       let tangent = createVector(-forceToMouse.y, forceToMouse.x); // Rotates a vector 90 degrees counterclockwise
-      if (particleDir.dot(tangent) < 0) tangent.mult(-1); // If dot product > 0, the particle is moving in the counterclockwise direction like the tangent
-
+      if (particleDir.dot(tangent) < 0) tangent.mult(-1); // If dot product > 0, the particle is moving in the clockwise direction like the tangent
       influenceForce.add(tangent);
     }
 
@@ -147,6 +136,7 @@ class Particle {
   }
 
   resetParticle() {
+    // Reposition the particle randomly, ensuring it's outside the influence radius
     do {
       this.position.x = random(width);
       this.position.y = random(height);
