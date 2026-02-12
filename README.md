@@ -1,5 +1,5 @@
 ## IFT 6256 - Assignment 2: Generative Art Inspired by an Algorithm
-### *Title* by Jessey Thach
+### *Where Life Persists* by Jessey Thach
 
 <br>
 
@@ -12,4 +12,6 @@
 
 <br>
 
-
+## Inspiration from
+[Coding Challenge #24: Perlin Noise Flow Field by The Coding Train](https://youtu.be/BjoM9oKOAKY?si=k-Bl_aCF7J8dM1jM)
+<br>
