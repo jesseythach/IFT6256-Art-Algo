@@ -45,36 +45,14 @@ function setup() {
   noCursor();
 }
 
-function colorPixel() {
-  // todo when put true to draw gradient, maybe do no loop() so laptop doesn't crash and burn
-  for (let x = 0; x < width; x++) {
-    for (let y = 0; y < height; y++) {
-      let colInd = floor(x / cellSize);
-      let rowInd = floor(y / cellSize);
-
-      let vector = flowField[colInd][rowInd];
-      let angle = Math.atan2(vector.y, vector.x) * (180 / Math.PI) + 180;
-
-      // lerpColor(color1, color2, nb between 0 and 1)
-
-      // Calculate color
-      let c = color(angle, 100, 100, 100);
-
-      // Set pixel color
-      set(x, y, c);
-    }
-  }
-  updatePixels();
-}
-
-function computeFlowField() {
+function generateFlowField() {
   for (let colInd = 0; colInd < cols; colInd++) {
     flowField[colInd] = [];
     for (let rowInd = 0; rowInd < rows; rowInd++) {
       // Create angle based on Perlin noise at each cell
       let angle = int(
         noise(colInd * noiseScale, rowInd * noiseScale, zOff) * 360 * 4,
-      ); // Allow the angle to do a full turn
+      ); // The average of the noise is 0.5, so multiplying by 4 allows the angle to go from 0 to 720 degrees.
       let unitVector = p5.Vector.fromAngle(radians(angle));
       flowField[colInd][rowInd] = unitVector.copy().mult(flowMagnitude);
     }
@@ -85,14 +63,9 @@ function computeFlowField() {
 function drawFlowField() {
   for (let colInd = 0; colInd < cols; colInd++) {
     for (let rowInd = 0; rowInd < rows; rowInd++) {
-      // fill((angle / 360 / 4) * 255); // For grayscale
-      // noFill();
       fill(255);
-      // noStroke();
       rect(colInd * cellSize, rowInd * cellSize, cellSize, cellSize);
-
       let unitVector = flowField[colInd][rowInd].div(flowMagnitude);
-      // text(angle, colInd*cellSize + cellSize/2, rowInd*cellSize + cellSize/2)
 
       let midPt = createVector(
         colInd * cellSize + cellSize / 2,
@@ -146,7 +119,7 @@ function draw() {
   pg.background(0, 0.03);
 
   // stroke(1);
-  computeFlowField();
+  generateFlowField();
   // drawFlowField();
 
   // colorPixel();
