@@ -16,8 +16,14 @@ let nbParticles = 10000;
 let influenceRadius = 200;
 
 let isPlaying = false;
+let showTitle = false;
 let influenceEnabled = false;
 let colorProfile = 1;
+let titleFont;
+let palette = {
+  circle: null,
+  title: null
+};
 
 function windowResized() {
   let canvasWidth = windowWidth - 2 * margin;
@@ -45,7 +51,35 @@ function setup() {
   noCursor();
 }
 
-function generateFlowField() {
+function changeColorProfile(newProfile) {
+  colorProfile = newProfile;
+  if (!isPlaying) return;
+
+  for (let i = 0; i < nbParticles; i++) {
+    particles[i].setColorProfile(colorProfile);
+  }
+}
+
+function setColors() {
+  switch (colorProfile) {
+    case 1:
+      palette.circle = color(180, 100, 100); // Blue
+      palette.title = color(180, 100, 100);
+      break;
+
+    case 2:
+      palette.circle = color(0, 0, 100); // White
+      palette.title = color(0, 0, 100);
+      break;
+
+    case 3:
+      palette.circle = color(50, 100, 100); // Yellow
+      palette.title = color(50, 100, 100);
+      break;
+  }
+}
+
+function computeFlowField() {
   for (let colInd = 0; colInd < cols; colInd++) {
     flowField[colInd] = [];
     for (let rowInd = 0; rowInd < rows; rowInd++) {
@@ -60,53 +94,14 @@ function generateFlowField() {
   zOff += zNoiseSpeed;
 }
 
-function drawFlowField() {
-  for (let colInd = 0; colInd < cols; colInd++) {
-    for (let rowInd = 0; rowInd < rows; rowInd++) {
-      fill(255);
-      rect(colInd * cellSize, rowInd * cellSize, cellSize, cellSize);
-      let unitVector = flowField[colInd][rowInd].div(flowMagnitude);
-
-      let midPt = createVector(
-        colInd * cellSize + cellSize / 2,
-        rowInd * cellSize + cellSize / 2,
-      );
-      let endPt = midPt.copy().add(unitVector.mult(arrowLength));
-      line(midPt.x, midPt.y, endPt.x, endPt.y);
-
-      // Draw arrowhead
-      let arrowSize = 4;
-      let angle = atan2(endPt.y - midPt.y, endPt.x - midPt.x);
-
-      push();
-      translate(endPt.x, endPt.y);
-      rotate(angle);
-      line(0, 0, -arrowSize, arrowSize / 2);
-      line(0, 0, -arrowSize, -arrowSize / 2);
-      pop();
-    }
-  }
-}
-
 function drawInfluence() {
-  switch (colorProfile) {
-    case 1:
-      circleColor = color(180, 100, 100); // Blue
-      break;
-    case 2:
-      circleColor = color(0, 0, 100); // White
-      break;
-    case 3:
-      circleColor = color(50, 100, 100); // Yellow
-      break;
-  }
   noFill();
   ellipseMode(CENTER);
 
   drawingContext.shadowBlur = 20;
-  drawingContext.shadowColor = circleColor;
+  drawingContext.shadowColor = palette.circle;
 
-  stroke(circleColor);
+  stroke(palette.circle);
   strokeWeight(8);
   for (let i = 0; i < 5; i++) {
     ellipse(mouseX, mouseY, influenceRadius * 0.75);
@@ -114,15 +109,36 @@ function drawInfluence() {
   drawingContext.shadowBlur = 0;
 }
 
+function preload() {
+  // titleFont = loadFont('assets/BitcountGridDouble-VariableFont_CRSV,ELSH,ELXP,slnt,wght.ttf');
+  titleFont = loadFont("assets/Exo2-VariableFont_wght.ttf");
+  // titleFont = loadFont('assets/RubikLines-Regular.ttf');
+}
+
+function drawTitle() {
+  pg.push();
+  let titleSize = min(width, height) * 0.07; // 7% of smaller dimension
+
+  pg.fill(palette.title, 10); // Faint glow with selected color
+  pg.noStroke();
+  pg.textFont(titleFont);
+  pg.textSize(titleSize);
+  pg.textAlign(CENTER, CENTER);
+  pg.textLeading(titleSize);
+  pg.text("Where Life Persists", width / 2, height / 2);
+  pg.pop();
+}
+
 function draw() {
   background(0);
   pg.background(0, 0.03);
+  setColors();
 
-  // stroke(1);
-  generateFlowField();
-  // drawFlowField();
+  if (showTitle) {
+    drawTitle();
+  }
+  computeFlowField();
 
-  // colorPixel();
   for (let p = 0; p < particles.length; p++) {
     particles[p].setNewForce(flowField, influenceEnabled);
     particles[p].updatePosition();
@@ -162,6 +178,11 @@ function keyPressed() {
     }
   }
 
+  // Show/hide title with key 'T'
+  if (keyCode === 84) {
+    showTitle = !showTitle;
+  }
+
   // Enable/disable influence with key 'I'
   if (keyCode === 73) {
     influenceEnabled = !influenceEnabled;
@@ -174,14 +195,5 @@ function keyPressed() {
     changeColorProfile(2);
   } else if (keyCode === 51) {
     changeColorProfile(3);
-  }
-}
-
-function changeColorProfile(newProfile) {
-  colorProfile = newProfile;
-  if (!isPlaying) return;
-
-  for (let i = 0; i < nbParticles; i++) {
-    particles[i].setColorProfile(colorProfile);
   }
 }
