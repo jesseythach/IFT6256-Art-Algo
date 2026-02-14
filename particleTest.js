@@ -13,6 +13,7 @@ class Particle {
   }
 
   setNewForce(flowField) {
+    // Get flow field force based on particle's current position
     let force =
       flowField[floor(this.position.x / cellSize)][
         floor(this.position.y / cellSize)
@@ -27,24 +28,20 @@ class Particle {
   }
 
   resetParticle() {
+    // Place particle randomly
     this.position.x = random(width);
     this.position.y = random(height);
+
+    // Reset motion
     this.velocity = createVector(0, 0);
     this.acceleration = createVector(0, 0);
   }
 
   checkEdges() {
-    if (this.position.x > width) {
-      this.resetParticle();
-    }
-    if (this.position.x < 0) {
-      this.resetParticle();
-    }
-    if (this.position.y > height) {
-      this.resetParticle();
-    }
-    if (this.position.y < 0) {
-      this.resetParticle();
-    }
+    // If particle leaves canvas, reset it
+    if (this.position.x > width) this.resetParticle();
+    if (this.position.x < 0) this.resetParticle();
+    if (this.position.y > height) this.resetParticle();
+    if (this.position.y < 0) this.resetParticle();
   }
 }

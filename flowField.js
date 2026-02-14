@@ -1,6 +1,8 @@
+// Canvas
 const margin = 2;
 let pg;
 
+// Flow field 
 let cols;
 let rows;
 let cellSize = 50;
@@ -11,25 +13,34 @@ let flowField = [];
 let flowMagnitude = 0.1;
 let arrowLength = cellSize / 2;
 
+// Particles
 let particles = [];
 let nbParticles = 10000;
+
+// Influence
 let influenceRadius = 200;
 
+// Interactions
 let isPlaying = false;
 let showTitle = false;
 let influenceEnabled = false;
+
+// Colors and fonts
 let colorProfile = 1;
 let titleFont;
 let palette = {
-  circle: null,
+  influence: null,
   title: null
 };
+
+// ================================= Canvas =================================
 
 function windowResized() {
   let canvasWidth = windowWidth - 2 * margin;
   let canvasHeight = windowHeight - 2 * margin;
   resizeCanvas(canvasWidth, canvasHeight);
   pg.resizeCanvas(canvasWidth, canvasHeight);
+
   cols = ceil(width / cellSize);
   rows = ceil(height / cellSize);
 }
@@ -39,8 +50,8 @@ function setup() {
   let canvasHeight = windowHeight - 2 * margin;
   createCanvas(canvasWidth, canvasHeight);
 
-  // Create layer for particles
-  pg = createGraphics(canvasWidth, canvasHeight);
+  // Create an "offscreen drawing canvas (graphics buffer" for particles
+  pg = createGraphics(canvasWidth, canvasHeight); 
   pg.colorMode(HSB);
   pg.background(0);
 
@@ -50,6 +61,8 @@ function setup() {
   colorMode(HSB);
   noCursor();
 }
+
+// ================================= Colors =================================
 
 function changeColorProfile(newProfile) {
   colorProfile = newProfile;
@@ -63,21 +76,23 @@ function changeColorProfile(newProfile) {
 function setColors() {
   switch (colorProfile) {
     case 1:
-      palette.circle = color(180, 100, 100); // Blue
+      palette.influence = color(180, 100, 100); // Blue
       palette.title = color(180, 100, 100);
       break;
 
     case 2:
-      palette.circle = color(0, 0, 100); // White
+      palette.influence = color(0, 0, 100); // White
       palette.title = color(0, 0, 100);
       break;
 
     case 3:
-      palette.circle = color(50, 100, 100); // Yellow
+      palette.influence = color(50, 100, 100); // Yellow
       palette.title = color(50, 100, 100);
       break;
   }
 }
+
+// ================================= Draw =================================
 
 function computeFlowField() {
   for (let colInd = 0; colInd < cols; colInd++) {
@@ -86,23 +101,26 @@ function computeFlowField() {
       // Create angle based on Perlin noise at each cell
       let angle = int(
         noise(colInd * noiseScale, rowInd * noiseScale, zOff) * 360 * 4,
-      ); // The average of the noise is 0.5, so multiplying by 4 allows the angle to go from 0 to 720 degrees.
-      let unitVector = p5.Vector.fromAngle(radians(angle));
+      ); // Since noise average is 0.5, multiplying by 4 allows angles to expand the range of possible angles to create more dynamic flow patterns
+      let unitVector = p5.Vector.fromAngle(radians(angle)); // Create direction vector from angle
       flowField[colInd][rowInd] = unitVector.copy().mult(flowMagnitude);
     }
   }
-  zOff += zNoiseSpeed;
+  zOff += zNoiseSpeed; // Increment the z-offset to create evolving noise over time
 }
 
 function drawInfluence() {
   noFill();
   ellipseMode(CENTER);
 
+  // Add glow effect around influence
   drawingContext.shadowBlur = 20;
-  drawingContext.shadowColor = palette.circle;
+  drawingContext.shadowColor = palette.influence;
 
-  stroke(palette.circle);
+  stroke(palette.influence);
   strokeWeight(8);
+  
+  // Draw multiple overlapping ellipses to enhance the glow effect
   for (let i = 0; i < 5; i++) {
     ellipse(mouseX, mouseY, influenceRadius * 0.75);
   }
@@ -117,9 +135,8 @@ function preload() {
 
 function drawTitle() {
   pg.push();
-  let titleSize = min(width, height) * 0.07; // 7% of smaller dimension
-
-  pg.fill(palette.title, 10); // Faint glow with selected color
+  let titleSize = min(width, height) * 0.07; 
+  pg.fill(palette.title, 10); 
   pg.noStroke();
   pg.textFont(titleFont);
   pg.textSize(titleSize);
@@ -130,27 +147,31 @@ function drawTitle() {
 }
 
 function draw() {
-  background(0);
-  pg.background(0, 0.03);
-  setColors();
+  background(0); // Clear the main canvas to prevent trails 
+  pg.background(0, 0.03); // Clear the offscreen canvas to create fading trails
+  setColors(); 
 
   if (showTitle) {
     drawTitle();
   }
-  computeFlowField();
 
+  computeFlowField(); // Recompute flow field for dynamic movement
+
+  // Update and render particles
   for (let p = 0; p < particles.length; p++) {
     particles[p].setNewForce(flowField, influenceEnabled);
     particles[p].updatePosition();
     particles[p].checkEdges();
     particles[p].display(pg);
   }
-  image(pg, 0, 0);
+  image(pg, 0, 0); // Draw the offscreen canvas onto the main canvas
 
   if (influenceEnabled) {
     drawInfluence();
   }
 }
+
+// ================================= Interactions =================================
 
 function keyPressed() {
   // Play/pause particles from moving with space key
