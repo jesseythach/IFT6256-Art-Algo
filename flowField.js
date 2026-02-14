@@ -6,7 +6,7 @@ let pg;
 let cols;
 let rows;
 let cellSize = 50;
-let noiseScale = 0.02; // check later
+let noiseScale = 0.02;
 let zOff = 0;
 let zNoiseSpeed = 0.001;
 let flowField = [];
@@ -50,7 +50,7 @@ function setup() {
   let canvasHeight = windowHeight - 2 * margin;
   createCanvas(canvasWidth, canvasHeight);
 
-  // Create an "offscreen drawing canvas (graphics buffer" for particles
+  // Create an "offscreen drawing canvas (graphics buffer)" for particles
   pg = createGraphics(canvasWidth, canvasHeight); 
   pg.colorMode(HSB);
   pg.background(0);

@@ -5,7 +5,7 @@ const margin = 2;
 let cols;
 let rows;
 let cellSize = 50;
-let noiseScale = 0.02; // check later
+let noiseScale = 0.02;
 let zOff = 0;
 let zNoiseSpeed = 0.001;
 let flowField = [];

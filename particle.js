@@ -108,7 +108,7 @@ class Particle {
     );
     let distance = forceToMouse.mag();
 
-    // If the particle is outside the influence radius, no force is applied
+    // If the particle is outside of the influence radius, no force is applied
     if (distance < 0 || distance > this.INFLUENCE_RADIUS) {
       this.influenceSpeedMult = 1;
       return createVector(0, 0);
@@ -171,7 +171,7 @@ class Particle {
     // Reset motion
     this.velocity = createVector(0, 0);
     this.acceleration = createVector(0, 0);
-    
+
     // Reset trail starting point
     this.prevPos = this.position.copy();
   }
