@@ -128,9 +128,7 @@ function drawInfluence() {
 }
 
 function preload() {
-  // titleFont = loadFont('assets/BitcountGridDouble-VariableFont_CRSV,ELSH,ELXP,slnt,wght.ttf');
   titleFont = loadFont("assets/Exo2-VariableFont_wght.ttf");
-  // titleFont = loadFont('assets/RubikLines-Regular.ttf');
 }
 
 function drawTitle() {
