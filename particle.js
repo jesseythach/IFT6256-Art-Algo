@@ -29,10 +29,13 @@ class Particle {
         catWeights = [0.5, 0.5]; // Green and Blue
         break;
       case 2:
-        catWeights = [0.1, 1, 0.3]; // White, Purple, and Blue
+        catWeights = [0.1, 0.7, 0.5]; // White, Purple, and Blue
         break;
       case 3:
         catWeights = [0.5, 0.5, 0.1, 0.1]; // Red, Orange, Pink, and Yellow
+        break;
+      case 4:
+        catWeights = [0.5, 0.7, 0.5, 0.2]; // Orange, Blue, Dark Blue, and Yellow
         break;
       default:
         console.warn("Invalid color profile selected:", profile);
@@ -69,7 +72,7 @@ class Particle {
         if (this.colorCategory == 1) {
           buffer.stroke(0, 0, 100); // White
         } else if (this.colorCategory == 2) {
-          buffer.stroke(random(260, 290), 100, 100); // Purple
+          buffer.stroke(242, 58, 88); // Purple
         } else {
           buffer.stroke(210, 60, 100); // Blue
         }
@@ -83,6 +86,17 @@ class Particle {
           buffer.stroke(338, 78, 100); // Pink
         } else {
           buffer.stroke(40, 80, 90); // Yellow
+        }
+        break;
+      case 4:
+        if (this.colorCategory == 1) {
+          buffer.stroke(39, 93, 82); // Orange
+        } else if (this.colorCategory == 2) {
+          buffer.stroke(210, 76, 92); // Blue
+        } else if (this.colorCategory == 3) {
+          buffer.stroke(235, 61, 50); // Dark Blue
+        } else {
+          buffer.stroke(40, 99, 96); // Yellow
         }
         break;
     }

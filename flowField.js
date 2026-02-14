@@ -2,7 +2,7 @@
 const margin = 2;
 let pg;
 
-// Flow field 
+// Flow field
 let cols;
 let rows;
 let cellSize = 50;
@@ -30,7 +30,7 @@ let colorProfile = 1;
 let titleFont;
 let palette = {
   influence: null,
-  title: null
+  title: null,
 };
 
 // ================================= Canvas =================================
@@ -51,7 +51,7 @@ function setup() {
   createCanvas(canvasWidth, canvasHeight);
 
   // Create an "offscreen drawing canvas (graphics buffer)" for particles
-  pg = createGraphics(canvasWidth, canvasHeight); 
+  pg = createGraphics(canvasWidth, canvasHeight);
   pg.colorMode(HSB);
   pg.background(0);
 
@@ -89,6 +89,10 @@ function setColors() {
       palette.influence = color(50, 100, 100); // Yellow
       palette.title = color(50, 100, 100);
       break;
+
+    case 4:
+      palette.influence = color(40, 99, 96); // Orange
+      palette.title = color(40, 99, 96);
   }
 }
 
@@ -119,7 +123,7 @@ function drawInfluence() {
 
   stroke(palette.influence);
   strokeWeight(8);
-  
+
   // Draw multiple overlapping ellipses to enhance the glow effect
   for (let i = 0; i < 5; i++) {
     ellipse(mouseX, mouseY, influenceRadius * 0.75);
@@ -133,8 +137,8 @@ function preload() {
 
 function drawTitle() {
   pg.push();
-  let titleSize = min(width, height) * 0.07; 
-  pg.fill(palette.title, 10); 
+  let titleSize = min(width, height) * 0.07;
+  pg.fill(palette.title, 10);
   pg.noStroke();
   pg.textFont(titleFont);
   pg.textSize(titleSize);
@@ -145,9 +149,9 @@ function drawTitle() {
 }
 
 function draw() {
-  background(0); // Clear the main canvas to prevent trails 
+  background(0); // Clear the main canvas to prevent trails
   pg.background(0, 0.03); // Clear the offscreen canvas to create fading trails
-  setColors(); 
+  setColors();
 
   if (showTitle) {
     drawTitle();
@@ -188,7 +192,12 @@ function keyPressed() {
   if (keyCode === 83) {
     if (!isPlaying) {
       for (let i = 0; i < nbParticles; i++) {
-        particles[i] = new Particle(random(width), random(height), influenceRadius, colorProfile);
+        particles[i] = new Particle(
+          random(width),
+          random(height),
+          influenceRadius,
+          colorProfile,
+        );
       }
       isPlaying = true;
     } else {
@@ -207,12 +216,14 @@ function keyPressed() {
     influenceEnabled = !influenceEnabled;
   }
 
-  // Change color profile with keys 1, 2, and 3
+  // Change color profile with keys 1, 2, 3, and 4
   if (keyCode === 49) {
     changeColorProfile(1);
   } else if (keyCode === 50) {
     changeColorProfile(2);
   } else if (keyCode === 51) {
     changeColorProfile(3);
+  } else if (keyCode === 52) {
+    changeColorProfile(4);
   }
 }
