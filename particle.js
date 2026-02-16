@@ -172,14 +172,15 @@ class Particle {
     this.position.add(this.velocity);
   }
 
-  resetParticle() {
+  resetParticle(influenceEnabled) {
     // Place particle randomly outside the influence radius
     do {
       this.position.x = random(width);
       this.position.y = random(height);
     } while (
+      influenceEnabled &&
       dist(mouseX, mouseY, this.position.x, this.position.y) <=
-      this.INFLUENCE_RADIUS
+        this.INFLUENCE_RADIUS
     );
 
     // Reset motion
@@ -190,11 +191,11 @@ class Particle {
     this.prevPos = this.position.copy();
   }
 
-  checkEdges() {
+  checkEdges(influenceEnabled) {
     // If particle leaves canvas, reset it
-    if (this.position.x > width) this.resetParticle();
-    if (this.position.x < 0) this.resetParticle();
-    if (this.position.y > height) this.resetParticle();
-    if (this.position.y < 0) this.resetParticle();
+    if (this.position.x > width) this.resetParticle(influenceEnabled);
+    if (this.position.x < 0) this.resetParticle(influenceEnabled);
+    if (this.position.y > height) this.resetParticle(influenceEnabled);
+    if (this.position.y < 0) this.resetParticle(influenceEnabled);
   }
 }

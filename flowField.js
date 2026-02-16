@@ -149,8 +149,8 @@ function drawTitle() {
 }
 
 function draw() {
-  background(0); // Clear the main canvas to prevent trails
-  pg.background(0, 0.03); // Clear the offscreen canvas to create fading trails
+  background(0); // Clear the main canvas to prevent trails from the influence circle
+  pg.background(0, 0.03); // Draw a semi-transparent background to create fading trails
   setColors();
 
   if (showTitle) {
@@ -163,7 +163,7 @@ function draw() {
   for (let p = 0; p < particles.length; p++) {
     particles[p].setNewForce(flowField, influenceEnabled);
     particles[p].updatePosition();
-    particles[p].checkEdges();
+    particles[p].checkEdges(influenceEnabled);
     particles[p].display(pg);
   }
   image(pg, 0, 0); // Draw the offscreen canvas onto the main canvas
